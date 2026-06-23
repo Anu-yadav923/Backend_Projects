@@ -1,22 +1,83 @@
 
 const express = require("express");
+
 const app = express();
 
-const auth = (req,res,next) => {
-    console.log("checking User");
-    next();
-};
+app.use(express.json());
 
-app.get("/",(req,res) =>{
-    res.send("home page");
+const books = [];
+
+app.get("/books", (req,res) =>{
+    res.json(books);
 });
 
-app.get("/about",(req,res) =>{
-    res.send("About Page");
+app.get("/books/:title",(req,res) =>{
+    const title = req.params.title;
+
+    const book = books.find((b) =>{
+        return b.title === title;
+    });
+
+    if(book) {
+        res.json(book);
+    }else{
+        res.status(404).json({
+            message: "book Not found"
+        });
+    }
 });
 
-app.get("/admin",auth,(req,res) =>{
-    res.send("Admin Page");
+app.post("/books", (req,res) => {
+    books.push(req.body);
+
+    res.status(201).json({
+        message: "Books added successfully",
+        book: req.body
+    });
 });
 
-app.listen(3000);
+
+// update data
+app.put("/books/:title", (req,res) => {
+    const title = req.params.title;
+
+    const book = books.find(b => b.title === title);
+
+    if(book) {
+        book.author = req.body.author;
+
+        res.json({
+            message: "Book updated successfully",
+            book: book
+        });
+    } else {
+        res.status(404).json({
+            message: "Book not found"
+        });
+    }
+});
+
+// delete data
+app.delete("/books/:title", (req,res) => {
+    const title = req.params.title;
+
+    const index = books.findIndex(b => b.title === title);
+
+    if(index !== -1) {
+        books.splice(index,1);
+
+        res.json({
+            message: "Book deleted successfully"
+        });
+    } else {
+        res.status(404).json({
+            message: "Book not found"
+        });
+    }
+});
+
+
+app.listen(3000,() =>{
+    console.log("Books API is running on Port 3000");
+});
+
